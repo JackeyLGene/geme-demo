@@ -1,4 +1,4 @@
-"""GEME 鈥?standalone, zero external dependencies.
+"""GEME — standalone, zero external dependencies.
 Single file. No gira library needed. Just Python 3.8+ stdlib.
 
 Usage:
@@ -12,19 +12,19 @@ from __future__ import annotations
 from typing import List, Tuple, Dict
 import math, statistics
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Structural constants (centralized, documented, frozen)
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-DELTA = 0.19     # 未: adaptive threshold scaling factor
-GAMMA = 0.05     # 纬: frame age decay multiplier
-TAU = 0.60       # 蟿: induction stress threshold
+# ──────────────────────────────────────────────────────────────────
+DELTA = 0.19     # δ: adaptive threshold scaling factor
+GAMMA = 0.05     # γ: frame age decay multiplier
+TAU = 0.60       # τ: induction stress threshold
 NOVELTY_BONUS = 5.0   # initial weight premium for novel inputs
 _D27 = 27        # default vector dimension
 
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Minimal formula language (replaces gira.phase3.language)
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 class Term:
     __slots__ = ("kind", "symbol", "args")
     def __init__(self, kind="", symbol="", args=None):
@@ -44,9 +44,9 @@ def fn(symbol: str, *args: Term) -> Term:
 def eq(t1: Term, t2: Term) -> Formula:
     return Formula("equation", t1, t2)
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Structural signature (replaces compute_signature)
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 def structural_signature(formula) -> str:
     """Generate formula structure signature (no variable names)."""
     parts = []
@@ -66,9 +66,9 @@ def structural_signature(formula) -> str:
     walk(formula)
     return "_".join(parts) if parts else "empty"
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Alphabet (27 symbols)
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 _ALPHABET = ["0","1","s","+","\u00d7","=","forall","exists","x","y","z","sub",
              "swap","pair","comm",
              "set","succ","empty","rank",
@@ -107,9 +107,9 @@ def symbol_vector(formula) -> Tuple[float, ...]:
 def vec_dist(a,b):
     return math.sqrt(sum((ai-bi)**2 for ai,bi in zip(a,b)))
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Frame
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 _FRAME_ID_COUNTER=[0]
 class Frame:
     __slots__=("vec","weight","sig","sig_full","src","age","merged","fid","layer")
@@ -118,9 +118,9 @@ class Frame:
         self.vec=vec; self.weight=weight; self.sig=sig[:30]; self.sig_full=sig
         self.src=src[:80] if src else sig[:30]; self.age=0; self.merged=0; self.layer=layer
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Memory (competitive memory economy)
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 class Memory:
     def __init__(self,capacity=10,merge_thresh=None,cooccur_window=50,
                  cooccur_thresh=0.25,max_chains=5):
@@ -142,25 +142,25 @@ class Memory:
         self._merge_history=[]
         self._novelty_bonus=NOVELTY_BONUS
         self.quantum_mode=False
-        # L4: d(w)/dt 杩借釜 + 棰勬祴甯?
-        self._weight_history={}  # fid 鈫?[(step, weight), ...]
-        self._derivative_frames=[]  # 宸茬敓鎴愮殑d(w)/dt甯?
-        # L4: 棰勬祴锛堟ā鎬侊級
-        self._prediction_accuracy=[]  # 婊氬姩鍑嗙‘鐜囩獥鍙?
+        # L4: d(w)/dt 追踪 + 预测帧
+        self._weight_history={}  # fid → [(step, weight), ...]
+        self._derivative_frames=[]  # 已生成的d(w)/dt帧
+        # L4: 预测（模态）
+        self._prediction_accuracy=[]  # 滚动准确率窗口
         self._pred_errors=0; self._pred_total=0
-        # 鑷€傚簲缃俊搴︽牎鍑?
+        # 自适应置信度校准
         self._confidences=[]          # all predict_next confidence values
-        self._conf_threshold=0.3      # bootstrap value 鈥?auto-calibrates to lower quartile
-        # L6: 缁熸憚锛堝綋棰勬祴绮惧害鎸佺画涓嬮檷鏃惰Е鍙戯級
+        self._conf_threshold=0.3      # bootstrap value — auto-calibrates to lower quartile
+        # L6: 统摄（当预测精度持续下降时触发）
         self._doubt_mode=False
         self._last_accuracy=1.0
-        # 绗?缁达細澶氫笘鐣?
+        # 第5维：多世界
         self._multiverse_enabled=True
         self._multiverse=[]
         self._step_branched=set()
 
     def _adaptive_window(self):
-        """鑷寚绐楀彛锛氬抚骞冲潎瀵垮懡 脳 2"""
+        """自指窗口：帧平均寿命 × 2"""
         if not self.frames: return self._win_max
         avg_life = self.total_weight / max(len(self.frames), 1)
         return max(5, min(200, int(avg_life * 2)))
@@ -180,14 +180,14 @@ class Memory:
     def observe(self,vec,sig,src="",layer="L1"):
         if not vec or len(vec)==0:
             return  # ignore empty vectors
-        # L4: 鍦ㄦ坊鍔犳柊杈撳叆鍓嶉娴嬩笅涓€涓抚锛岀劧鍚庝笌瀹為檯瀵规瘮
+        # L4: 在添加新输入前预测下一个帧，然后与实际对比
         if sig:
             self.process_prediction(sig)
         bi,bd=-1,float('inf')
         # Compute threshold FIRST (before candidate selection)
         thresh=self._adaptive_thresh()
         self._merge_thresh_val=thresh or 0.0
-        # 鑷寚绐楀彛锛氭瘡鏉¤瀵熸洿鏂颁竴娆?
+        # 自指窗口：每条观察更新一次
         self._win_max = self._adaptive_window()
         
         candidates=[]
@@ -215,18 +215,18 @@ class Memory:
                 for i,d,f,p in probs:
                     acc += p
                     if r <= acc: bi=i; bd=d; chosen=(i,d,f); break
-                # 绗?缁达細淇濆瓨鏈€夊€欓€変负鍒嗘敮涓栫晫
+                # 第5维：保存未选候选为分支世界
                 if self._multiverse_enabled and len(candidates)>1:
                     from copy import deepcopy
                     step_id=self._step_counter
                     for i,d,f in candidates:
-                        if i==bi: continue  # 璺宠繃琚€変腑鐨?
-                        # 鎷疯礉褰撳墠甯х粡娴庘€斺€斾綔涓哄垎鏀偣鐨勬浛浠?
+                        if i==bi: continue  # 跳过被选中的
+                        # 拷贝当前帧经济——作为分支点的替代
                         branch_frames = deepcopy(self.frames)
-                        # 鍚屾椂搴旂敤鍚堝苟鍒颁涪澶辩殑鍊欓€夊抚
+                        # 同时应用合并到丢失的候选帧
                         for bf in branch_frames:
-                            if bf.fid==f.fid:  # 鎵惧埌涓㈠け鐨勫抚锛屽簲鐢ㄥ悎骞?
-                                # 鍚堝苟鍒颁涪澶卞抚
+                            if bf.fid==f.fid:  # 找到丢失的帧，应用合并
+                                # 合并到丢失帧
                                 old_vec=tuple(bf.vec)
                                 bf.vec=tuple((bf.vec[j]*bf.weight+vec[j])/(bf.weight+1) for j in range(len(vec)))
                                 bf.weight+=1.0
@@ -243,7 +243,7 @@ class Memory:
                     if len(combined.split("_"))<=8: f.sig=combined[:30]
                 self.total_weight+=f.weight; self._step_counter+=1
                 self._last_merge_fid = f.fid; self._merge_history.append(f.fid)
-                # L4: 璁板綍鏉冮噸鍘嗗彶
+                # L4: 记录权重历史
                 if f.fid not in self._weight_history:
                     self._weight_history[f.fid]=[]
                 self._weight_history[f.fid].append((self._step_counter, f.weight))
@@ -266,7 +266,7 @@ class Memory:
                 if len(combined.split("_"))<=8: f.sig=combined[:30]
             self.total_weight+=f.weight
             self._last_merge_fid=f.fid; self._merge_history.append(f.fid)
-            # L4: 璁板綍鏉冮噸鍘嗗彶
+            # L4: 记录权重历史
             if f.fid not in self._weight_history:
                 self._weight_history[f.fid]=[]
             self._weight_history[f.fid].append((self._step_counter, f.weight))
@@ -281,7 +281,7 @@ class Memory:
                 r=self.frames.pop(0); self.total_weight-=r.weight
             nf=Frame(vec,nw,sig,src,layer=layer); self.frames.append(nf); self.total_weight+=nw
             self._last_merge_fid=nf.fid; self._merge_history.append(nf.fid)
-            # L4: 鍒濆鍖栨潈閲嶅巻鍙?
+            # L4: 初始化权重历史
             self._weight_history[nf.fid]=[(self._step_counter, nw)]
         self._step_counter+=1
         step_id=self._step_counter
@@ -299,7 +299,7 @@ class Memory:
             for (sa,sb),count in list(self._cooccur.items()):
                 ratio=count/total_steps
                 if ratio>=self.cooccur_thresh and count>=max(5,total_steps*0.05):
-                    assoc_sig=sa+"鈹€鈹€"+sb
+                    assoc_sig=sa+"──"+sb
                     existing=[f for f in self.frames if (f.sig_full or f.sig)==assoc_sig]
                     if existing:
                         for exf in existing:
@@ -330,7 +330,7 @@ class Memory:
                 fa,fb=cur[fids[i]],cur[fids[j]]
                 ckey=tuple(sorted([f"fid_{fa.fid}",f"fid_{fb.fid}"]))
                 if self._cooccur.get(ckey,0)>=self._chain_cooccur_thresh:
-                    ms=f"f{fa.fid}鈺愨晲f{fb.fid}"
+                    ms=f"f{fa.fid}══f{fb.fid}"
                     if any(ff.sig_full==ms for ff in self.frames): continue
                     chain_w=(fa.weight+fb.weight)/2
                     if len(self.frames)>=self.capacity:
@@ -354,20 +354,20 @@ class Memory:
         active=[f for f in self.frames if f.weight>2]
         if not active:
             return
-        # L4: 璁＄畻鏉冮噸瀵兼暟
+        # L4: 计算权重导数
         derivs=self.compute_derivatives()
-        # 璇嗗埆d(w)/dt鏄捐憲鐨勫抚浣滀负L4鍏冭鐭ヨ娴嬪璞?
+        # 识别d(w)/dt显著的帧作为L4元认知观测对象
         high_dw=[(fid,dw) for fid,dw in derivs.items() if abs(dw)>0.02]
         if high_dw:
-            # 灏嗗鏁版渶澶х殑涓変釜浣滀负L4鍏冭娴嬩俊鍙?
+            # 将导数最大的三个作为L4元观测信号
             high_dw.sort(key=lambda x: abs(x[1]), reverse=True)
             for fid, dw in high_dw[:3]:
-                # 鎵惧埌瀵瑰簲甯?
+                # 找到对应帧
                 match=[f for f in self.frames if f.fid==fid]
                 if match:
                     meta_vec=match[0].vec
                     dw_str=f"dwdw_{abs(dw):.2f}"
-                    # 娉ㄥ叆d(w)/dt鍏冭娴嬪抚
+                    # 注入d(w)/dt元观测帧
                     self.observe(meta_vec, dw_str, layer="L4")
         # Weighted centroid: aggregate vector of the frame economy's state
         total_w = sum(f.weight for f in active)
@@ -393,7 +393,7 @@ class Memory:
     
     def induction_clean(self):
         self.self_observe()  # observe before pruning
-        self._chain_count = 0  # 閲嶇疆閾捐鏁帮紝鍏佽鍚庣画缁х画褰㈡垚閾?
+        self._chain_count = 0  # 重置链计数，允许后续继续形成链
         for f in self.frames:
             self.total_weight-=f.weight
             if f.merged==0: f.weight*=0.80
@@ -404,7 +404,7 @@ class Memory:
         half=max(1,len(self.frames)//2)
         for f in self.frames[half:]: self.total_weight-=f.weight
         self.frames=self.frames[:half]
-        # L4: 娓呯悊宸插壀鏋濆抚鐨勬潈閲嶅巻鍙?
+        # L4: 清理已剪枝帧的权重历史
         alive_fids={f.fid for f in self.frames}
         for fid in list(self._weight_history.keys()):
             if fid not in alive_fids:
@@ -454,14 +454,14 @@ class Memory:
         
         Uses the co-occurrence table to compute p(phi, x) for all pairs of
         (self_sig, ext_sig) that have appeared in the same window.
-        When I(phi; X) 鈫?0, self-reference carries no information about input.
+        When I(phi; X) → 0, self-reference carries no information about input.
         """
         from math import log2
         # Identify self-referential vs external signatures
         phi_keys = set()  # signatures containing "self"
         x_keys = set()   # signatures NOT containing "self"
         for (sa, sb) in self._cooccur:
-            # Association frames (鈹€鈹€) are phi-family
+            # Association frames (──) are phi-family
             if 'self' in sa or chr(8212)*2 in sa:
                 phi_keys.add(sa)
             else:
@@ -472,11 +472,11 @@ class Memory:
                 x_keys.add(sb)
         if not phi_keys or not x_keys:
             return 0.0
-        # 鍏ㄧ┖闂存€诲拰锛堝寘鎷琾hi-phi銆亁-x銆乸hi-x鎵€鏈夊锛?
+        # 全空间总和（包括phi-phi、x-x、phi-x所有对）
         total_all = sum(c for c in self._cooccur.values())
         if total_all == 0:
             return 0.0
-        # 棰勮绠楄竟闄呮鐜囷紙鍏ㄧ┖闂达級
+        # 预计算边际概率（全空间）
         p_phi_cache = {}
         p_x_cache = {}
         for sig in phi_keys:
@@ -519,27 +519,27 @@ class Memory:
         return derivs
     
     def is_meta_stable(self, fid):
-        """Check if a frame's weight is meta-stable (d(w)/dt 鈮?0)."""
+        """Check if a frame's weight is meta-stable (d(w)/dt ≈ 0)."""
         derivs = self.compute_derivatives()
         if fid not in derivs:
             return False
         return abs(derivs[fid]) < 0.01
     
-    # 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-    # L4: 棰勬祴锛堟ā鎬佽穬杩侊級
-    # 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ──────────────────────────────────────────────────────────
+    # L4: 预测（模态跃迁）
+    # ──────────────────────────────────────────────────────────
     def predict_next(self):
-        """浠嶭3妗?cooccur琛ㄩ娴嬩笅涓€涓渶鍙兘鍑虹幇鐨勫抚绛惧悕銆?
-        鐢ㄦ渶鍚?涓潪self杈撳叆绛惧悕棰勬祴涓嬩竴涓€?
-        杩斿洖 (predicted_sig, confidence)銆傚鏋滄棤瓒冲鏁版嵁锛岃繑鍥?(None, 0.0)銆?""
+        """从L3桥+cooccur表预测下一个最可能出现的帧签名。
+        用最后2个非self输入签名预测下一个。
+        返回 (predicted_sig, confidence)。如果无足够数据，返回 (None, 0.0)。"""
         if len(self._window) < 3:
             return None, 0.0
-        # 浠庢粦鍔ㄧ獥鍙ｆ嬁鏈€鍚?涓潪self_obs绛惧悕浣滀负涓婁笅鏂?
+        # 从滑动窗口拿最后2个非self_obs签名作为上下文
         recent = [entry[0] for entry in self._window if entry[0] != 'self_obs']
         if len(recent) < 2:
             return None, 0.0
-        ctx = recent[-2:]  # [鍓嶄竴涓? 褰撳墠] 鈫?棰勬祴涓嬩竴涓?
-        # 鍦╟ooccur琛ㄤ腑鎼滃悓鏃朵笌杩欎袱涓鍚嶇殑鏈€鍏宠仈鐨勭涓変釜
+        ctx = recent[-2:]  # [前一个, 当前] → 预测下一个
+        # 在cooccur表中搜同时与这两个签名的最关联的第三个
         scores = {}
         for sig in ctx:
             for (sa, sb), c in self._cooccur.items():
@@ -580,9 +580,9 @@ class Memory:
         else:
             self._prediction_accuracy.append(0.0)
             self._pred_errors += 1
-            # L4: 棰勬祴璇樊 鈫?鐢熸垚pred_err鍏冨抚
+            # L4: 预测误差 → 生成pred_err元帧
             err_str = f"pred_err_{conf:.2f}_{predicted[:8]}_{actual_sig[:8]}"
-            # 鐢ㄥ綋鍓嶈緭鍏ュ悜閲忔敞鍏ヨ宸抚
+            # 用当前输入向量注入误差帧
             match = [f for f in self.frames if 'pred_err' in (f.sig_full or f.sig)]
             if not match:
                 dummy_vec = (0.0,) * len(self.frames[0].vec) if self.frames else (0.0,) * _VEC_DIM
@@ -593,7 +593,7 @@ class Memory:
                 self.frames.append(nf); self.total_weight += 5.0
         if len(self._prediction_accuracy) > 50:
             self._prediction_accuracy.pop(0)
-        # L6: 缁熸憚鈥旀娴嬬郴缁熸€у噯纭巼涓嬮檷
+        # L6: 统摄—检测系统性准确率下降
         recent_acc = sum(self._prediction_accuracy[-10:]) / len(self._prediction_accuracy[-10:]) if self._prediction_accuracy else 1.0
         if not self._doubt_mode and len(self._prediction_accuracy) >= 10 and recent_acc < 0.6 and self._last_accuracy > 0.8:
             self._doubt_mode = True
@@ -636,13 +636,13 @@ class Memory:
             "layers": self.count_by_layer(),
         }
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # GEME
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 class GEME:
     """Zero domain knowledge. No pretrained weights. No loss function.
     
-    Extended with dynamic vocabulary (L1鈫扡2 pipeline support):
+    Extended with dynamic vocabulary (L1→L2 pipeline support):
       - vocab_mode: when True, surviving association frames are promoted
         to the vocabulary table after each induction cycle.
       - vocab: dict of {sig: (word_string, weight)} discovered from
@@ -659,9 +659,9 @@ class GEME:
         self.frame_count=0; self._last_induction=0; self._input_count=0
         self.time_window_size=time_window_size
         self._inputs_in_window=0
-        # Dynamic vocabulary (for L1鈫扡2 character-to-word pipeline)
+        # Dynamic vocabulary (for L1→L2 character-to-word pipeline)
         self.vocab_mode=False
-        self.vocab={}  # sig 鈫?(word, weight)
+        self.vocab={}  # sig → (word, weight)
         self._decoded_signatures={}
     
     def enable_vocab(self):
@@ -673,9 +673,9 @@ class GEME:
         Called after induction. Only promotes frames with clean patterns."""
         for f in self.memory.frames:
             sig=f.sig_full or f.sig
-            if "鈹€鈹€" in sig and f.weight>5:
+            if "──" in sig and f.weight>5:
                 # Extract characters from association signature
-                parts=sig.split("鈹€鈹€")
+                parts=sig.split("──")
                 chars=[]
                 for p in parts:
                     for cm in range(32,126):
@@ -734,18 +734,18 @@ class GEME:
         For character-level processing where vectors must be distinct."""
         self.frame_count+=1; self._input_count+=1
         self.memory.observe(vec, sig, src)
-        # 绗?缁达細灏嗚緭鍏ヤ紶鎾埌鎵€鏈夊垎鏀笘鐣?
+        # 第5维：将输入传播到所有分支世界
         if self.memory._multiverse_enabled and self.memory._multiverse:
             new_mv=[]
             for branch_frames, step_branched, branch_id in self.memory._multiverse:
-                if len(new_mv)>=20: break  # 涓婇檺闃茬垎鐐?
-                # 鍦ㄥ垎鏀抚闆嗕笂鎵炬渶杩戝抚鍚堝苟
+                if len(new_mv)>=20: break  # 上限防爆炸
+                # 在分支帧集上找最近帧合并
                 bi=-1; bd=float('inf')
                 for i,f in enumerate(branch_frames):
-                    # 鍔ㄦ€佺淮搴︼細瀵归綈闀垮害
+                    # 动态维度：对齐长度
                     dl=min(len(vec),len(f.vec))
                     d=sum((vec[j]-f.vec[j])**2 for j in range(dl))
-                    # 鏈榻愰儴鍒嗘寜涓嶅尮閰嶅鐞嗭紙璺濈鎯╃綒锛?
+                    # 未对齐部分按不匹配处理（距离惩罚）
                     d += abs(len(vec)-len(f.vec)) * 0.25
                     if d<bd: bd=d; bi=i
                 th=self.memory._adaptive_thresh() or DELTA
@@ -785,20 +785,20 @@ class GEME:
             m["compression_ratio"]=round(self._input_count/max(len(self.memory.frames),1),1)
         return m
 
-    # 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ──────────────────────────────────────────────────────────────
     # High-level API (friendly interface)
-    # 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+    # ──────────────────────────────────────────────────────────────
     def input(self, data, sig_hint=""):
         """Unified input: auto-detect text vs vector vs scalar.
         
         Examples:
-            g.input("cat on mat")         # text 鈫?auto-encoded
-            g.input([0.5, 0.3, ...])      # vector 鈫?direct
-            g.input(42)                   # scalar 鈫?one-hot
+            g.input("cat on mat")         # text → auto-encoded
+            g.input([0.5, 0.3, ...])      # vector → direct
+            g.input(42)                   # scalar → one-hot
         """
         import math as _m
         if isinstance(data, str):
-            # Text input: character frequency 鈫?27-dim vector
+            # Text input: character frequency → 27-dim vector
             char_counts = [0.0]*_VEC_DIM
             for ch in data:
                 idx = ord(ch) % _VEC_DIM
@@ -909,9 +909,9 @@ class GEME:
                 if line:
                     self.input(line)
 
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 # Self-test
-# 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+# ──────────────────────────────────────────────────────────────────
 if __name__=="__main__":
     # Quick smoke test: 100 inputs, expect no errors
     import random
