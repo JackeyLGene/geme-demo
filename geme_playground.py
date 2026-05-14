@@ -1,5 +1,5 @@
 """
-GEME Playground 鈥?interactive demo for general audience.
+GEME Playground — interactive demo for general audience.
 Run: streamlit run geme_playground.py
 """
 import math, random
@@ -10,12 +10,12 @@ st.set_page_config(page_title="GEME: Self-Referential Prism", layout="wide")
 st.title("GEME: Self-Referential Prism")
 
 MODE = st.sidebar.radio("Choose a demo:", [
-    "Cat on Mat 鈥?Six-Layer Pipeline",
-    "Surprise Detection 鈥?Narrative Twist",
-    "Human vs Machine 鈥?Structural Signature",
+    "Cat on Mat — Six-Layer Pipeline",
+    "Surprise Detection — Narrative Twist",
+    "Human vs Machine — Structural Signature",
 ])
 
-# 鈹€鈹€ Shared State 鈹€鈹€
+# ── Shared State ──
 if 'g' not in st.session_state:
     st.session_state.g = GEME(memory_cap=16)
     st.session_state.g.memory.preserve_sig = True
@@ -23,7 +23,7 @@ if 'g' not in st.session_state:
     st.session_state.log = []
 
 # ===================================================================
-# MODE 1: Cat on Mat 鈥?Six-Layer Pipeline
+# MODE 1: Cat on Mat — Six-Layer Pipeline
 # ===================================================================
 if MODE.startswith("Cat on Mat"):
     st.subheader("Feed text word by word through the six-layer pipeline")
@@ -61,9 +61,9 @@ if MODE.startswith("Cat on Mat"):
         frames = sorted(g.memory.frames, key=lambda f: -f.weight)
         for f in frames[:8]:
             label = f"F{f.fid}: **{f.sig[:25]}** (L{f.layer}) w={f.weight:.1f}"
-            if '鈹€鈹€' in (f.sig_full or ''): label += " 馃敆"
-            if 'self' in (f.sig or ''): label += " 馃獮"
-            if 'pred_err' in (f.sig or ''): label += " 鈿狅笍"
+            if '──' in (f.sig_full or ''): label += " 🔗"
+            if 'self' in (f.sig or ''): label += " 🪞"
+            if 'pred_err' in (f.sig or ''): label += " ⚠️"
             st.write(label)
 
         if st.button("Reset"): del st.session_state.cat_step
@@ -98,12 +98,12 @@ elif MODE.startswith("Surprise"):
                 results.append((line.strip()[:40], g.anomaly_score(), g.metrics()['pred_total']))
 
         g.input(twist)
-        results.append((f"鉃★笍 {twist[:40]}", g.anomaly_score(), g.metrics()['pred_total']))
+        results.append((f"➡️ {twist[:40]}", g.anomaly_score(), g.metrics()['pred_total']))
 
         for text, anomaly, preds in results:
             bar = "#" * int(anomaly * 20)
             color = "red" if anomaly > 0.6 else "green" if anomaly < 0.4 else "orange"
-            st.markdown(f"`:{color}[{bar}]` {anomaly:.2f} 鈥?{text}")
+            st.markdown(f"`:{color}[{bar}]` {anomaly:.2f} — {text}")
 
 # ===================================================================
 # MODE 3: Human vs Machine
